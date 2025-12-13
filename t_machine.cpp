@@ -14,8 +14,8 @@ using namespace std;
 */
 int N, M, K;
 char B;
-vector<char> symbols;// where 00 = 2 = symbols[2] = 1
-
+map<char, int> symbols;// where 00 = 2 = symbols[2] = 1
+vector<int> tape;
 
 struct Instruction{
     // int cur_state;
@@ -92,26 +92,40 @@ bool read_line(void){
 
     return true;
 }
+
+void read_tape(void){
+    char c;
+    
+    while((c = getchar()) != '\n'){
+        if(c == ' ')
+            continue;
+        c = symbols[c];
+    }
+
+}
 int main (int argc, char * argv[]){
     cin >> N >> M >> K;
     read_input();  
     read_line();
-    
+    read_tape();
+
     return 0;
 }
 
 bool read_input(void){
-    symbols.push_back(' ');  
+      
     for (int i = 0; i < M ; i++){
         char c;
         cin >> c;
-        symbols.push_back(c);
+        symbols[c] = i+1;
     }
     cin >> B;
-    symbols.push_back(B);
+    symbols[B] = N + 1;
 
-    for (int i = 1; i < M + 2; i++){
-        cout << symbols[i] << endl;
+    for (auto const& symbol : symbols){
+        char name = symbol.first;
+        int value = symbol.second;
+        cout << "Znak: " << symbol.first << " -> ID: " << symbol.second << endl;
     }
     return true;
 }
