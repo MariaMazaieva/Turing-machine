@@ -14,8 +14,7 @@ using namespace std;
 */
 int N, M, K;
 char B;
-map<char, int> symbols;// where 00 = 2 = symbols[2] = 1
-vector<int> tape;
+
 
 struct Instruction{
     // int cur_state;
@@ -28,7 +27,8 @@ struct Instruction{
 bool read_input(void);
 
 map <pair<int, int>, vector<Instruction>> rules;
-
+map<char, int> symbols;// X -> 1; (char) 0 -> 1 (int)
+vector<int> tape;
 
 bool read_line(void){
     string line;
@@ -95,11 +95,19 @@ bool read_line(void){
 
 void read_tape(void){
     char c;
-    
+    c = getchar();
+    cout <<"First char " << c << endl;
     while((c = getchar()) != '\n'){
         if(c == ' ')
             continue;
+        // cout << c << endl;
         c = symbols[c];
+        tape.push_back(c);
+    }
+    cout << "Tape at [0] "<< tape[0] << endl;
+
+    for(int i = 0; i < K; i++){
+        cout << tape[i] << endl;
     }
 
 }
