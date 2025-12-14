@@ -4,13 +4,21 @@
 #include <mutex>
 #include <string.h>
 #include <map>
+#include <deque>
 
-#define DEBUG 1  // Comment this line out to disable printing
+// #define DEBUG 1  // Comment this line out to disable printing
+#define TEST 1
 
 #ifdef DEBUG
 #define LOG(x) std::cout << x 
 #else
 #define LOG(x)
+#endif
+
+#ifdef TEST
+#define TST(x) std::cout << x 
+#else
+#define TST(x)
 #endif
 
 using namespace std; 
@@ -30,6 +38,7 @@ struct Instruction{
     int new_state;
     int new_symb;
     int dir;
+    int id;
 
 };
 bool read_input(void);
@@ -37,47 +46,87 @@ bool read_input(void);
 map <pair<int, int>, vector<Instruction>> rules;
 map<char, int> symbols;// X -> 1; (char) 0 -> 1 (int)
 vector<char> id_to_char;
-vector<int> tape;
+deque <int> tape;
 bool is_dtrmistic = true;
 
 
 bool transform_tape(void){
     int state, symbl, counter, index=0;
     state = 1;
-    for(int i = 0; i < K; i ++){
-        symbl = tape[i];
+    // for(int i = 0; i < K; i ++){
+    while(true){
+        if (index < 0) {
+            // Vloží Blank (ID M+1) na začátek vektoru
+            tape.push_front(symbols[B]); 
+            index = 0; // Hlava je teď na novém prvním políčku (což je ten Blank)
+        }
+        // Pokud jsme vyjeli vpravo (index >= size) -> Přidáme Blank na konec
+        else if (index >= tape.size()) {
+            tape.push_back(symbols[B]);
+        }
+        symbl = tape[index];
         vector<Instruction>& instrs = rules[{state, symbl}];
         // cout << "size "<< instrs.size()<<endl;
         
         if (instrs.size() == 1)
         {   
             Instruction instr = instrs[0];
-            cout << "instr " << instr.new_state<<endl;
-            // tape[i] = symbols[instr.new_symb];
-            tape[i] = instr.new_symb;
-
+            // LOG( "instr " << instr.new_state<<endl);
+            tape[index] = instr.new_symb;
+            state = instr.new_state;
             if(instr.dir == 1)
                 index++;
             else 
                 index--;
-            if(instr.new_state == 2)
+            if(state == 2){
+                LOG("KOnec "<<endl);
                 break;
-        }else if (instrs.empty())
-        {
-            LOG("D");
-            return true;
+            }
+
+        }
+        // else if (instrs.empty())
+        // {
+        //     TST("D" << endl);
+        //     return true;
+        // }
+        else if (instrs.empty()) {
+            LOG("CHYBA: Zadna instrukce pro -> Stav: " << state 
+            << ", Symbol ID: " << symbl 
+            << " (" << id_to_char[symbl] << ")" << endl);
         }
         else
         {
+            LOG("Hello " << endl);
             return false;
 
         }
     }
     if(is_dtrmistic)
-        cout << 'D' << endl;
-    for(int i = 0; i < K; i++)
-         LOG(id_to_char[tape[i]] << " ");
-    LOG(endl);
+        TST('D' << endl);
+    int first_nonblank = -1;
+    int last_nonblank = -1;
+    int blank_id = symbols[B];
+    
+    for(int i = 0; i < tape.size(); i++){
+        if(tape[i] != blank_id){
+            if(first_nonblank == -1)
+                first_nonblank = i;
+            last_nonblank = i;
+        }
+    }
+    if(first_nonblank != -1){
+        for(int i = first_nonblank; i <= last_nonblank; i++){
+            TST(id_to_char[tape[i]]);
+            if(i < last_nonblank) 
+                TST(" ");
+        }
+        TST(endl);
+    }
+
+    // for(int i = 0; i < tape.size(); i++)
+    //     TST(id_to_char[tape[i]] << " ");
+
+    // TST(endl);
     return true;
 }
 
@@ -88,7 +137,7 @@ bool read_line(void){
 
     cin >> line;
     
-    for(int i = 3; i < line.size() - 2; i ++){
+    for(int i = 0; i < line.size(); i ++){
         char c = line[i];
         if (c == '0')
             count_zero++;
@@ -147,20 +196,31 @@ bool read_line(void){
 
 void read_tape(void){
     char c;
-    c = getchar();
-    LOG("First char " << c << endl);  
-    while((c = getchar()) != '\n'){
-        if(c == ' ')
-            continue;
-        // cout << "c is "<<c << endl;
-        c = symbols[c];
-        tape.push_back(c);
+    // c = getchar();
+    // LOG("First char " << c << endl);  
+    // while((c = getchar()) != '\n'){
+    //     if(c == ' ')
+    //         continue;
+    //     // cout << "c is "<<c << endl;
+    //     c = symbols[c];
+    //     tape.push_back(c);
+    // }
+    for(int i = 0; i < K; i++){
+        string s; 
+        if(cin >> s) {
+            // Pokud symbol známe, převedeme na ID, jinak Error (nebo Blank)
+            if(symbols.find(s[0]) != symbols.end()) {
+                tape.push_back(symbols[s[0]]);
+            } else {
+                tape.push_back(symbols[B]);
+            }
+        }
     }
     LOG( "Tape at [0] "<< tape[0] << endl);
 
-    for(int i = 0; i < K; i++){
-        LOG( tape[i] << endl);
-    }
+    // for(int i = 0; i < K; i++){
+    //     LOG( tape[i] << endl);
+    // }
 
 }
 int main (int argc, char * argv[]){
@@ -174,7 +234,7 @@ int main (int argc, char * argv[]){
 }
 
 bool read_input(void){
-    id_to_char.push_back(' ');
+    id_to_char.push_back('?');
     for (int i = 0; i < M ; i++){
         char c;
         cin >> c;
@@ -182,7 +242,9 @@ bool read_input(void){
         id_to_char.push_back(c);
     }
     cin >> B;
-    symbols[B] = N + 1;
+    symbols[B] = M + 1;
+    id_to_char.push_back(B);
+    // symbols[B] = ' ';
 
     for (auto const& symbol : symbols){
         char name = symbol.first;
