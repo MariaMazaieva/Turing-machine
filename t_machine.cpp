@@ -5,6 +5,14 @@
 #include <string.h>
 #include <map>
 
+#define DEBUG 1  // Comment this line out to disable printing
+
+#ifdef DEBUG
+#define LOG(x) std::cout << x 
+#else
+#define LOG(x)
+#endif
+
 using namespace std; 
 /*
     N - pocet stavu
@@ -30,7 +38,7 @@ map <pair<int, int>, vector<Instruction>> rules;
 map<char, int> symbols;// X -> 1; (char) 0 -> 1 (int)
 vector<char> id_to_char;
 vector<int> tape;
-
+bool is_dtrmistic = true;
 
 
 bool transform_tape(void){
@@ -39,8 +47,12 @@ bool transform_tape(void){
     for(int i = 0; i < K; i ++){
         symbl = tape[i];
         vector<Instruction>& instrs = rules[{state, symbl}];
-        if (instrs.size() == 1){
+        // cout << "size "<< instrs.size()<<endl;
+        
+        if (instrs.size() == 1)
+        {   
             Instruction instr = instrs[0];
+            cout << "instr " << instr.new_state<<endl;
             // tape[i] = symbols[instr.new_symb];
             tape[i] = instr.new_symb;
 
@@ -50,12 +62,22 @@ bool transform_tape(void){
                 index--;
             if(instr.new_state == 2)
                 break;
+        }else if (instrs.empty())
+        {
+            LOG("D");
+            return true;
+        }
+        else
+        {
+            return false;
+
         }
     }
-
+    if(is_dtrmistic)
+        cout << 'D' << endl;
     for(int i = 0; i < K; i++)
-        cout <<id_to_char[tape[i]] << " ";
-    cout<< endl;
+         LOG(id_to_char[tape[i]] << " ");
+    LOG(endl);
     return true;
 }
 
@@ -103,7 +125,7 @@ bool read_line(void){
         int state_in = entry.first.first;
         int read_sym = entry.first.second;
 
-        cout << "Klíč [Stav " << state_in << ", Čte " << read_sym << "] -> ";
+        LOG( "Klíč [Stav " << state_in << ", Čte " << read_sym << "] -> ");
 
         // 2. Získej hodnotu (Seznam instrukcí)
         // entry.second je typu vector<Instruction>
@@ -111,12 +133,13 @@ bool read_line(void){
 
         // Protože to může být nedeterministické, může tam být více instrukcí
         for (auto const& instr : targets) {
-            cout << "{Kam: " << instr.new_state 
+            LOG("{Kam: " << instr.new_state 
                  << ", Píše: " << instr.new_symb 
-                 << ", Směr: " << (instr.dir == 1 ? "R" : "L") << "} ";
+                 << ", Směr: " << (instr.dir == 1 ? "R" : "L") << "} "
+                );
         }
         
-        cout << endl; // Odřádkování za jedním klíčem
+        LOG(endl); // Odřádkování za jedním klíčem
     }
 
     return true;
@@ -125,18 +148,18 @@ bool read_line(void){
 void read_tape(void){
     char c;
     c = getchar();
-    cout <<"First char " << c << endl;
+    LOG("First char " << c << endl);  
     while((c = getchar()) != '\n'){
         if(c == ' ')
             continue;
-        // cout << c << endl;
+        // cout << "c is "<<c << endl;
         c = symbols[c];
         tape.push_back(c);
     }
-    cout << "Tape at [0] "<< tape[0] << endl;
+    LOG( "Tape at [0] "<< tape[0] << endl);
 
     for(int i = 0; i < K; i++){
-        cout << tape[i] << endl;
+        LOG( tape[i] << endl);
     }
 
 }
@@ -164,7 +187,7 @@ bool read_input(void){
     for (auto const& symbol : symbols){
         char name = symbol.first;
         int value = symbol.second;
-        cout << "Znak: " << symbol.first << " -> ID: " << symbol.second << endl;
+        LOG ("Znak: " << symbol.first << " -> ID: " << symbol.second << endl);
     }
     return true;
 }
