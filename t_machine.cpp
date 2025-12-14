@@ -28,7 +28,36 @@ bool read_input(void);
 
 map <pair<int, int>, vector<Instruction>> rules;
 map<char, int> symbols;// X -> 1; (char) 0 -> 1 (int)
+vector<char> id_to_char;
 vector<int> tape;
+
+
+
+bool transform_tape(void){
+    int state, symbl, counter, index=0;
+    state = 1;
+    for(int i = 0; i < K; i ++){
+        symbl = tape[i];
+        vector<Instruction>& instrs = rules[{state, symbl}];
+        if (instrs.size() == 1){
+            Instruction instr = instrs[0];
+            // tape[i] = symbols[instr.new_symb];
+            tape[i] = instr.new_symb;
+
+            if(instr.dir == 1)
+                index++;
+            else 
+                index--;
+            if(instr.new_state == 2)
+                break;
+        }
+    }
+
+    for(int i = 0; i < K; i++)
+        cout <<id_to_char[tape[i]] << " ";
+    cout<< endl;
+    return true;
+}
 
 bool read_line(void){
     string line;
@@ -116,16 +145,18 @@ int main (int argc, char * argv[]){
     read_input();  
     read_line();
     read_tape();
+    transform_tape();
 
     return 0;
 }
 
 bool read_input(void){
-      
+    id_to_char.push_back(' ');
     for (int i = 0; i < M ; i++){
         char c;
         cin >> c;
         symbols[c] = i+1;
+        id_to_char.push_back(c);
     }
     cin >> B;
     symbols[B] = N + 1;
